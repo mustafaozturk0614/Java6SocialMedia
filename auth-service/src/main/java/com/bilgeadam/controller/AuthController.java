@@ -5,42 +5,44 @@ import com.bilgeadam.dto.request.ActivateRequestDto;
 import com.bilgeadam.dto.request.LoginRequestDto;
 import com.bilgeadam.dto.request.RegisterRequestDto;
 import com.bilgeadam.dto.response.RegisterResponseDto;
+import com.bilgeadam.repository.entity.Auth;
 import com.bilgeadam.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.bind.annotation.*;
+import static com.bilgeadam.constant.ApiUrls.*;
 import javax.validation.Valid;
+import java.util.List;
 
 /*
-    dışarıdan login olmak için gerekli parametreleri alalım
-    eğer bilgiler doğru ise bize true yanlış ise false donsun
+  status u active hale getirdiğim zaman  user microservisindede statusum active hale gelsin
 
  */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/auth")
+@RequestMapping(AUTH)
 public class AuthController {
 
     private final AuthService authService;
 
-    @PostMapping("/register")
+    @PostMapping(REGISTER)
     public ResponseEntity<RegisterResponseDto> register(@RequestBody @Valid RegisterRequestDto dto){
         return ResponseEntity.ok(authService.register(dto));
     }
 
-    @PostMapping("/login")
+    @PostMapping(LOGIN)
     public ResponseEntity<Boolean> login(@RequestBody LoginRequestDto dto){
             return  ResponseEntity.ok(authService.login(dto));
     }
 
-    @PostMapping("/activatestatus")
+    @PostMapping(ACTIVATESTATUS)
     public ResponseEntity<Boolean> activateStatus(@RequestBody ActivateRequestDto dto){
         return ResponseEntity.ok(authService.activateStatus(dto));
     }
 
+     @GetMapping(FINDALL)
+     public ResponseEntity<List<Auth>> findAll(){
+        return ResponseEntity.ok(authService.findAll());
+    }
 
 }

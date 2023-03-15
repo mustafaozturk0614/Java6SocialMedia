@@ -4,7 +4,8 @@ ext{
             postgresql: "42.5.4",
             lombok:"1.18.26",
             openApi: "1.6.14",
-            mapStruct: "1.5.3.Final"
+            mapStruct: "1.5.3.Final",
+            springCloud:"3.1.5"
     ]
 
     libs=[
@@ -16,6 +17,7 @@ ext{
            openApi: "org.springdoc:springdoc-openapi-ui:$versions.openApi",
            mapStruct: "org.mapstruct:mapstruct:$versions.mapStruct",
            mapStructProcessor:"org.mapstruct:mapstruct-processor:$versions.mapStruct",
+            springOpenFeign: "org.springframework.cloud:spring-cloud-starter-openfeign:$versions.springCloud"
 
     ]
 

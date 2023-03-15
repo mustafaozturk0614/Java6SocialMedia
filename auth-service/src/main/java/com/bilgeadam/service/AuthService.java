@@ -6,13 +6,13 @@ import com.bilgeadam.dto.request.RegisterRequestDto;
 import com.bilgeadam.dto.response.RegisterResponseDto;
 import com.bilgeadam.exception.AuthManagerException;
 import com.bilgeadam.exception.ErrorType;
+import com.bilgeadam.manager.IUserManager;
 import com.bilgeadam.mapper.IAuthMapper;
 import com.bilgeadam.repository.IAuthRepository;
 import com.bilgeadam.repository.entity.Auth;
 import com.bilgeadam.repository.enums.EStatus;
 import com.bilgeadam.utility.CodeGenerator;
 import com.bilgeadam.utility.ServiceManager;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -22,9 +22,12 @@ public class AuthService extends ServiceManager<Auth,Long> {
 
     private final IAuthRepository authRepository;
 
-    public AuthService(IAuthRepository authRepository) {
+    private final IUserManager userManager;
+
+    public AuthService(IAuthRepository authRepository, IUserManager userManager) {
         super(authRepository);
         this.authRepository = authRepository;
+        this.userManager = userManager;
     }
 
     public RegisterResponseDto register(RegisterRequestDto dto) {
@@ -32,7 +35,7 @@ public class AuthService extends ServiceManager<Auth,Long> {
         auth.setActivationCode(CodeGenerator.genarateCode());
 
             save(auth);
-
+        userManager.createUser(IAuthMapper.INSTANCE.toNewCreateUserRequestDto(auth));
         RegisterResponseDto registerResponseDto=IAuthMapper.INSTANCE.toRegisterResponseDto(auth);
         return  registerResponseDto;
     }
@@ -53,6 +56,8 @@ public class AuthService extends ServiceManager<Auth,Long> {
         if (dto.getActivationCode().equals(auth.get().getActivationCode())){
             auth.get().setStatus(EStatus.ACTIVE);
             update(auth.get());
+            // user service e istek atılacak
+            userManager.activateStatus(auth.get().getId());
             return true;
         }else {
             throw new AuthManagerException(ErrorType.ACTIVATE_CODE_ERROR);

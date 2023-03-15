@@ -1,9 +1,11 @@
 package com.bilgeadam.mapper;
 
+import com.bilgeadam.dto.request.NewCreateUserRequestDto;
 import com.bilgeadam.dto.request.RegisterRequestDto;
 import com.bilgeadam.dto.response.RegisterResponseDto;
 import com.bilgeadam.repository.entity.Auth;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
@@ -16,5 +18,8 @@ public interface IAuthMapper {
 
     Auth toAuth(final RegisterRequestDto dto);
     RegisterResponseDto toRegisterResponseDto(final Auth auth);
+
+    @Mapping(source = "id",target = "authId")
+    NewCreateUserRequestDto toNewCreateUserRequestDto(final Auth auth);
 
 }
