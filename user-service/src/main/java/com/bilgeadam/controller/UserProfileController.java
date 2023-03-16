@@ -1,12 +1,16 @@
 package com.bilgeadam.controller;
 
 import com.bilgeadam.dto.request.NewCreateUserRequestDto;
+import com.bilgeadam.dto.request.UserProfileUpdateRequestDto;
 import com.bilgeadam.repository.entity.UserProfile;
 import com.bilgeadam.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+/*
 
+    update metodu oluşturulacak
+ */
 import static com.bilgeadam.constant.ApiUrls.*;
 @RestController
 @RequestMapping(USER)
@@ -26,6 +30,10 @@ public class UserProfileController {
         return ResponseEntity.ok(userProfileService.activateStatus(authId));
     }
 
+    @PutMapping(UPDATE)
+    public ResponseEntity<Boolean> update(@RequestBody UserProfileUpdateRequestDto dto){
+        return ResponseEntity.ok(userProfileService.update(dto));
+    }
 
 
 }

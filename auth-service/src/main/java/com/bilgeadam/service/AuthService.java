@@ -12,6 +12,7 @@ import com.bilgeadam.repository.IAuthRepository;
 import com.bilgeadam.repository.entity.Auth;
 import com.bilgeadam.repository.enums.EStatus;
 import com.bilgeadam.utility.CodeGenerator;
+import com.bilgeadam.utility.JwtTokenManager;
 import com.bilgeadam.utility.ServiceManager;
 import org.springframework.stereotype.Service;
 
@@ -24,10 +25,13 @@ public class AuthService extends ServiceManager<Auth,Long> {
 
     private final IUserManager userManager;
 
-    public AuthService(IAuthRepository authRepository, IUserManager userManager) {
+    private final JwtTokenManager jwtTokenManager;
+
+    public AuthService(IAuthRepository authRepository, IUserManager userManager, JwtTokenManager jwtTokenManager) {
         super(authRepository);
         this.authRepository = authRepository;
         this.userManager = userManager;
+        this.jwtTokenManager = jwtTokenManager;
     }
 
     public RegisterResponseDto register(RegisterRequestDto dto) {
@@ -40,12 +44,19 @@ public class AuthService extends ServiceManager<Auth,Long> {
         return  registerResponseDto;
     }
 
-    public Boolean login(LoginRequestDto dto) {
+    public String login(LoginRequestDto dto) {
         Optional<Auth> auth=authRepository.findOptionalByUsernameAndPassword(dto.getUsername(), dto.getPassword());
+
         if (auth.isEmpty()){
             throw  new AuthManagerException(ErrorType.LOGIN_ERROR);
         }
-        return true;
+        if (!auth.get().getStatus().equals(EStatus.ACTIVE)){
+            throw new AuthManagerException(ErrorType.ACCOUNT_NOT_ACTIVE);
+        }
+
+        return jwtTokenManager.createToken(auth.get().getId()
+                ,auth.get().getRole()).orElseThrow(()-> {throw new AuthManagerException(ErrorType.TOKEN_NOT_CREATED);});
+
     }
 
     public Boolean activateStatus(ActivateRequestDto dto) {

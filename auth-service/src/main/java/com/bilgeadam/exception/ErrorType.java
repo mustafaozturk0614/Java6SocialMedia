@@ -13,6 +13,10 @@ public enum ErrorType {
     USERNAME_DUPLICATE(4111,"Böyle bir kullanıcı adı mevcut",HttpStatus.BAD_REQUEST),
     USER_NOT_FOUND(4112,"Böyle bir kullanıcı bulunamadı",HttpStatus.NOT_FOUND),
     ACTIVATE_CODE_ERROR(4113,"Aktivasyon kod hatası",HttpStatus.BAD_REQUEST),
+    INVALID_TOKEN(4114,"Geçersiz token",HttpStatus.BAD_REQUEST),
+    TOKEN_NOT_CREATED(4115,"Token oluşturulamadı",HttpStatus.BAD_REQUEST),
+    ACCOUNT_NOT_ACTIVE(4116,"Aktive Edilmemiş Hesap!!!",HttpStatus.FORBIDDEN);
+
               ;
     private int code;
     private String message;
