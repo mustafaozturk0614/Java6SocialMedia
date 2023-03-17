@@ -4,6 +4,7 @@ package com.bilgeadam.controller;
 import com.bilgeadam.dto.request.ActivateRequestDto;
 import com.bilgeadam.dto.request.LoginRequestDto;
 import com.bilgeadam.dto.request.RegisterRequestDto;
+import com.bilgeadam.dto.request.UpdateEmailOrUsernameRequestDto;
 import com.bilgeadam.dto.response.RegisterResponseDto;
 import com.bilgeadam.repository.entity.Auth;
 import com.bilgeadam.repository.enums.ERole;
@@ -17,8 +18,7 @@ import javax.validation.Valid;
 import java.util.List;
 
 /*
-  login metodumuzu düzeltelim
-  bize bir token uretip tokenı donsun ayrıca sadece active kullanıcılar login olabilsin
+delete işleminde verimizi silmiyoruz sadece statusunu değiştriyoruz
 
  */
 @RestController
@@ -67,5 +67,17 @@ public class AuthController {
     @GetMapping("/getrolefromtoken")
     public  ResponseEntity<String> getRoleFromToken(String token){
         return ResponseEntity.ok(tokenManager.getRoleFromToken(token).get());
+    }
+
+    @PutMapping("/updateemailorusername")
+    public ResponseEntity<Boolean> updateEmailOrUsername(@RequestBody UpdateEmailOrUsernameRequestDto dto){
+
+        return ResponseEntity.ok(authService.updateEmailOrUsername(dto));
+    }
+
+    @DeleteMapping(DELETEBYID)
+    public ResponseEntity<Boolean> delete(Long id){
+
+        return ResponseEntity.ok(authService.delete(id));
     }
 }

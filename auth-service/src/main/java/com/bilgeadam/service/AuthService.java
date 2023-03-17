@@ -3,6 +3,7 @@ package com.bilgeadam.service;
 import com.bilgeadam.dto.request.ActivateRequestDto;
 import com.bilgeadam.dto.request.LoginRequestDto;
 import com.bilgeadam.dto.request.RegisterRequestDto;
+import com.bilgeadam.dto.request.UpdateEmailOrUsernameRequestDto;
 import com.bilgeadam.dto.response.RegisterResponseDto;
 import com.bilgeadam.exception.AuthManagerException;
 import com.bilgeadam.exception.ErrorType;
@@ -16,6 +17,7 @@ import com.bilgeadam.utility.JwtTokenManager;
 import com.bilgeadam.utility.ServiceManager;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.Optional;
 
 @Service
@@ -34,12 +36,21 @@ public class AuthService extends ServiceManager<Auth,Long> {
         this.jwtTokenManager = jwtTokenManager;
     }
 
+    @Transactional
     public RegisterResponseDto register(RegisterRequestDto dto) {
         Auth auth= IAuthMapper.INSTANCE.toAuth(dto);
         auth.setActivationCode(CodeGenerator.genarateCode());
-
             save(auth);
-        userManager.createUser(IAuthMapper.INSTANCE.toNewCreateUserRequestDto(auth));
+            try {
+                userManager.createUser(IAuthMapper.INSTANCE.toNewCreateUserRequestDto(auth));
+            }catch (Exception e){
+
+           //     delete(auth);
+                throw  new AuthManagerException(ErrorType.USER_NOT_CREATED);
+            }
+
+
+
         RegisterResponseDto registerResponseDto=IAuthMapper.INSTANCE.toRegisterResponseDto(auth);
         return  registerResponseDto;
     }
@@ -74,5 +85,31 @@ public class AuthService extends ServiceManager<Auth,Long> {
             throw new AuthManagerException(ErrorType.ACTIVATE_CODE_ERROR);
         }
 
+    }
+
+    public Boolean updateEmailOrUsername(UpdateEmailOrUsernameRequestDto dto) {
+
+        Optional<Auth> auth=authRepository.findById(dto.getAuthId());
+        if (auth.isEmpty()){
+            throw  new AuthManagerException(ErrorType.USER_NOT_FOUND);
+        }
+        auth.get().setUsername(dto.getUsername());
+        auth.get().setEmail(dto.getEmail());
+        update(auth.get());
+        return  true;
+    }
+
+    @Transactional
+    public Boolean delete(Long id){
+        Optional<Auth> auth=findById(id);
+        if (auth.isEmpty()){
+            throw new AuthManagerException(ErrorType.USER_NOT_FOUND);
+        }
+        auth.get().setStatus(EStatus.DELETED);
+        update(auth.get());
+
+        userManager.delete(id);
+
+        return true;
     }
 }
