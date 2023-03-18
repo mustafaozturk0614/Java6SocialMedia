@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 
     update metodu oluşturulacak
  */
+import java.util.List;
+
 import static com.bilgeadam.constant.ApiUrls.*;
 @RestController
 @RequestMapping(USER)
@@ -38,6 +40,10 @@ public class UserProfileController {
     @DeleteMapping(DELETEBYID)
     public ResponseEntity<Boolean> delete(@RequestParam Long authId){
         return ResponseEntity.ok(userProfileService.delete(authId));
+    }
+    @GetMapping(FINDALL)
+    public ResponseEntity<List<UserProfile>> findAll(){
+        return ResponseEntity.ok(userProfileService.findAll());
     }
 
 }

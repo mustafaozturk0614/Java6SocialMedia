@@ -112,4 +112,23 @@ public class AuthService extends ServiceManager<Auth,Long> {
 
         return true;
     }
+
+    @Transactional
+    public Boolean delete2(String token){
+        Optional<Long> authId=jwtTokenManager.getIdFromToken(token);
+        if (authId.isEmpty()){
+            throw new AuthManagerException(ErrorType.INVALID_TOKEN);
+
+        }
+        Optional<Auth> auth=findById(authId.get());
+        if (auth.isEmpty()){
+            throw new AuthManagerException(ErrorType.USER_NOT_FOUND);
+        }
+        auth.get().setStatus(EStatus.DELETED);
+        update(auth.get());
+
+        userManager.delete(authId.get());
+
+        return true;
+    }
 }

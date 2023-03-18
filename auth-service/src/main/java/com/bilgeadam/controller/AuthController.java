@@ -80,4 +80,9 @@ public class AuthController {
 
         return ResponseEntity.ok(authService.delete(id));
     }
+
+    @PutMapping(DELETEBYID+2)
+    public ResponseEntity<Boolean> delete2(String token){
+        return ResponseEntity.ok(authService.delete2(token));
+    }
 }
