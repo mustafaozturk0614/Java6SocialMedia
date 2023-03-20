@@ -47,6 +47,9 @@ allprojects {
         implementation libs.springBootValidation
         implementation libs.springOpenFeign
         implementation libs.javaJwt
+        implementation libs.springCloudSleuthZipkin
+        implementation libs.springCloudSleuth
+        implementation libs.springBootDataRedis
     }
 
 }

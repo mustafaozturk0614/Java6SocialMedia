@@ -11,6 +11,9 @@ import com.bilgeadam.repository.enums.ERole;
 import com.bilgeadam.service.AuthService;
 import com.bilgeadam.utility.JwtTokenManager;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import static com.bilgeadam.constant.ApiUrls.*;
@@ -29,6 +32,7 @@ public class AuthController {
     private final AuthService authService;
 
     private final JwtTokenManager tokenManager;
+    private final CacheManager cacheManager;
 
     @PostMapping(REGISTER)
     public ResponseEntity<RegisterResponseDto> register(@RequestBody @Valid RegisterRequestDto dto){
@@ -85,4 +89,35 @@ public class AuthController {
     public ResponseEntity<Boolean> delete2(String token){
         return ResponseEntity.ok(authService.delete2(token));
     }
+
+    @GetMapping("/redis")
+    @Cacheable(value = "redisexample")
+    public  String redisExample(String value){
+        try {
+            Thread.sleep(2000);
+            return value;
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @GetMapping("/redisdelete")
+    @CacheEvict(cacheNames = "redisexample",allEntries = true)
+    public void redisDelete(){
+    }
+
+    @GetMapping("/redisdelete2")
+    public Boolean redisDelete2(){
+
+        try {
+          //  cacheManager.getCache("redisexample").clear() ; //aynı isimle cache lenmis butun verileri siler
+            cacheManager.getCache("redisexample").evict("mustafa");
+            return  true;
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+            return  false;
+         }
+    }
+
+
 }

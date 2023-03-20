@@ -12,10 +12,16 @@ import com.bilgeadam.repository.entity.UserProfile;
 import com.bilgeadam.repository.enums.EStatus;
 import com.bilgeadam.utility.JwtTokenManager;
 import com.bilgeadam.utility.ServiceManager;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
-
+/*
+    user microservisinde findbyrole diye bir metot yazalım bu metot girdiğimiz role gore
+    bize databasedeki userprofile ları donsun ayrıcıca bu methodu cachleyelim
+    birde bu cache ne zman ve nasıl silinir bunla ilgili kod eklemelerinide yapalım
+ */
 @Service
 public class UserProfileService extends ServiceManager<UserProfile,Long> {
 
@@ -24,11 +30,14 @@ public class UserProfileService extends ServiceManager<UserProfile,Long> {
     private final JwtTokenManager jwtTokenManager;
 
     private final IAuthManager authManager;
-    public UserProfileService(IUserProfileRepository userProfileRepository, JwtTokenManager jwtTokenManager, IAuthManager authManager) {
+
+    private final CacheManager cacheManager;
+    public UserProfileService(IUserProfileRepository userProfileRepository, JwtTokenManager jwtTokenManager, IAuthManager authManager, CacheManager cacheManager) {
         super(userProfileRepository);
         this.userProfileRepository = userProfileRepository;
         this.jwtTokenManager = jwtTokenManager;
         this.authManager = authManager;
+        this.cacheManager = cacheManager;
     }
 
     public Boolean createUser(NewCreateUserRequestDto dto) {
@@ -62,6 +71,7 @@ public class UserProfileService extends ServiceManager<UserProfile,Long> {
         if (userProfile.isEmpty()){
             throw new UserManagerException(ErrorType.USER_NOT_FOUND);
         }
+        cacheManager.getCache("findbyusername").evict(userProfile.get().getUsername().toLowerCase());
         if ( !dto.getUsername().equals(userProfile.get().getUsername())||!dto.getEmail().equals(userProfile.get().getEmail())){
             userProfile.get().setUsername(dto.getUsername());
             userProfile.get().setEmail(dto.getEmail());
@@ -87,5 +97,20 @@ public class UserProfileService extends ServiceManager<UserProfile,Long> {
         userProfile.get().setStatus(EStatus.DELETED);
         update(userProfile.get());
         return  true;
+    }
+
+    @Cacheable(value = "findbyusername",key ="#username.toLowerCase()")
+    public UserProfile findByUsername(String username) {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        Optional<UserProfile> userProfile=userProfileRepository.findOptionalByUsernameIgnoreCase(username);
+        if (userProfile.isEmpty()){
+            throw new UserManagerException(ErrorType.USER_NOT_FOUND);
+        }
+        return userProfile.get();
     }
 }

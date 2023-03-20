@@ -5,11 +5,12 @@ import com.bilgeadam.dto.request.UserProfileUpdateRequestDto;
 import com.bilgeadam.repository.entity.UserProfile;
 import com.bilgeadam.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
+import org.apache.catalina.User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 /*
 
-    update metodu oluşturulacak
+    finbyusername metodu yazalım bu metodu service de cacheleyelim
  */
 import java.util.List;
 
@@ -44,6 +45,11 @@ public class UserProfileController {
     @GetMapping(FINDALL)
     public ResponseEntity<List<UserProfile>> findAll(){
         return ResponseEntity.ok(userProfileService.findAll());
+    }
+
+    @GetMapping("/findbyusername")
+    public ResponseEntity<UserProfile> findByUsername(@RequestParam  String username){
+        return  ResponseEntity.ok(userProfileService.findByUsername(username));
     }
 
 }
