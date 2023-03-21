@@ -9,16 +9,22 @@ import com.bilgeadam.exception.AuthManagerException;
 import com.bilgeadam.exception.ErrorType;
 import com.bilgeadam.manager.IUserManager;
 import com.bilgeadam.mapper.IAuthMapper;
+import com.bilgeadam.rabbitmq.producer.RegisterProducer;
 import com.bilgeadam.repository.IAuthRepository;
 import com.bilgeadam.repository.entity.Auth;
+import com.bilgeadam.repository.enums.ERole;
 import com.bilgeadam.repository.enums.EStatus;
 import com.bilgeadam.utility.CodeGenerator;
 import com.bilgeadam.utility.JwtTokenManager;
 import com.bilgeadam.utility.ServiceManager;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class AuthService extends ServiceManager<Auth,Long> {
@@ -29,31 +35,58 @@ public class AuthService extends ServiceManager<Auth,Long> {
 
     private final JwtTokenManager jwtTokenManager;
 
-    public AuthService(IAuthRepository authRepository, IUserManager userManager, JwtTokenManager jwtTokenManager) {
+    private final CacheManager cacheManager;
+
+    private final RegisterProducer registerProducer;
+
+    public AuthService(IAuthRepository authRepository, IUserManager userManager, JwtTokenManager jwtTokenManager, CacheManager cacheManager, RegisterProducer registerProducer) {
         super(authRepository);
         this.authRepository = authRepository;
         this.userManager = userManager;
         this.jwtTokenManager = jwtTokenManager;
+        this.cacheManager = cacheManager;
+        this.registerProducer = registerProducer;
     }
 
     @Transactional
     public RegisterResponseDto register(RegisterRequestDto dto) {
         Auth auth= IAuthMapper.INSTANCE.toAuth(dto);
         auth.setActivationCode(CodeGenerator.genarateCode());
-            save(auth);
             try {
+                save(auth);
                 userManager.createUser(IAuthMapper.INSTANCE.toNewCreateUserRequestDto(auth));
+                cacheManager.getCache("findbyrole").evict(auth.getRole().toString().toUpperCase());
             }catch (Exception e){
 
            //     delete(auth);
                 throw  new AuthManagerException(ErrorType.USER_NOT_CREATED);
             }
 
+        RegisterResponseDto registerResponseDto=IAuthMapper.INSTANCE.toRegisterResponseDto(auth);
+        return  registerResponseDto;
+    }
 
+    @Transactional
+    public RegisterResponseDto registerWithRabbitMq(RegisterRequestDto dto) {
+        Auth auth= IAuthMapper.INSTANCE.toAuth(dto);
+        auth.setActivationCode(CodeGenerator.genarateCode());
+        try {
+            save(auth);
+
+            //rabbit mq ile haberleşme sağlanacak
+            registerProducer.sendNewUser(IAuthMapper.INSTANCE.toRegisterModel(auth));
+            cacheManager.getCache("findbyrole").evict(auth.getRole().toString().toUpperCase());
+        }catch (Exception e){
+
+            //     delete(auth);
+            throw  new AuthManagerException(ErrorType.USER_NOT_CREATED);
+        }
 
         RegisterResponseDto registerResponseDto=IAuthMapper.INSTANCE.toRegisterResponseDto(auth);
         return  registerResponseDto;
     }
+
+
 
     public String login(LoginRequestDto dto) {
         Optional<Auth> auth=authRepository.findOptionalByUsernameAndPassword(dto.getUsername(), dto.getPassword());
@@ -130,5 +163,18 @@ public class AuthService extends ServiceManager<Auth,Long> {
         userManager.delete(authId.get());
 
         return true;
+    }
+
+    public List<Long> findByRole(String role) {
+        ERole myrole;
+        try {
+            myrole=ERole.valueOf(role.toUpperCase(Locale.ENGLISH));
+
+        }catch (Exception e){
+        throw  new AuthManagerException(ErrorType.ROLE_NOT_FOUND);
+        }
+
+
+        return  authRepository.findAllByRole(myrole).stream().map(x->x.getId()).collect(Collectors.toList());
     }
 }

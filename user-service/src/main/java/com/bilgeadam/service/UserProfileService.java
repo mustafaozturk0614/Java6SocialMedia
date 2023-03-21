@@ -7,6 +7,7 @@ import com.bilgeadam.exception.ErrorType;
 import com.bilgeadam.exception.UserManagerException;
 import com.bilgeadam.manager.IAuthManager;
 import com.bilgeadam.mapper.IUserMapper;
+import com.bilgeadam.rabbitmq.model.RegisterModel;
 import com.bilgeadam.repository.IUserProfileRepository;
 import com.bilgeadam.repository.entity.UserProfile;
 import com.bilgeadam.repository.enums.EStatus;
@@ -14,9 +15,14 @@ import com.bilgeadam.utility.JwtTokenManager;
 import com.bilgeadam.utility.ServiceManager;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
 /*
     user microservisinde findbyrole diye bir metot yazalım bu metot girdiğimiz role gore
     bize databasedeki userprofile ları donsun ayrıcıca bu methodu cachleyelim
@@ -47,9 +53,15 @@ public class UserProfileService extends ServiceManager<UserProfile,Long> {
         }catch (Exception e){
             throw  new UserManagerException(ErrorType.USER_NOT_CREATED);
         }
-
     }
-
+    public Boolean createUserWithRabbitMq(RegisterModel model) {
+        try {
+            save(IUserMapper.INSTANCE.toUserProfile(model));
+            return  true;
+        }catch (Exception e){
+            throw  new UserManagerException(ErrorType.USER_NOT_CREATED);
+        }
+    }
     public Boolean activateStatus(Long authId) {
         Optional<UserProfile> userProfile=userProfileRepository.findOptionalByAuthId(authId);
         if (userProfile.isEmpty()){
@@ -112,5 +124,21 @@ public class UserProfileService extends ServiceManager<UserProfile,Long> {
             throw new UserManagerException(ErrorType.USER_NOT_FOUND);
         }
         return userProfile.get();
+    }
+
+    @Cacheable(value = "findbyrole",key ="#role.toUpperCase()")
+    public List<UserProfile> findByRole(String role) {
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        //ResponseEntity<List<Long>>authIds2=authManager.findByRole(role);
+      List<Long> authIds=authManager.findByRole(role).getBody();
+
+        return authIds.stream().map(x-> userProfileRepository.findOptionalByAuthId(x)
+                .orElseThrow(()->{throw new UserManagerException(ErrorType.USER_NOT_FOUND);}))
+                .collect(Collectors.toList());
     }
 }
