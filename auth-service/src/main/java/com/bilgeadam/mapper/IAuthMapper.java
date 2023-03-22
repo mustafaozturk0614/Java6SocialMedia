@@ -3,6 +3,7 @@ package com.bilgeadam.mapper;
 import com.bilgeadam.dto.request.NewCreateUserRequestDto;
 import com.bilgeadam.dto.request.RegisterRequestDto;
 import com.bilgeadam.dto.response.RegisterResponseDto;
+import com.bilgeadam.rabbitmq.model.RegisterMailModel;
 import com.bilgeadam.rabbitmq.model.RegisterModel;
 import com.bilgeadam.repository.entity.Auth;
 import org.mapstruct.Mapper;
@@ -24,5 +25,7 @@ public interface IAuthMapper {
     NewCreateUserRequestDto toNewCreateUserRequestDto(final Auth auth);
     @Mapping(source = "id",target = "authId")
     RegisterModel toRegisterModel(final Auth auth);
+
+    RegisterMailModel toRegisterMailModel(final Auth auth);
 
 }

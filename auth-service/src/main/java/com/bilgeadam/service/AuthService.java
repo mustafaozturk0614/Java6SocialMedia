@@ -9,6 +9,7 @@ import com.bilgeadam.exception.AuthManagerException;
 import com.bilgeadam.exception.ErrorType;
 import com.bilgeadam.manager.IUserManager;
 import com.bilgeadam.mapper.IAuthMapper;
+import com.bilgeadam.rabbitmq.producer.RegisterMailProducer;
 import com.bilgeadam.rabbitmq.producer.RegisterProducer;
 import com.bilgeadam.repository.IAuthRepository;
 import com.bilgeadam.repository.entity.Auth;
@@ -39,13 +40,16 @@ public class AuthService extends ServiceManager<Auth,Long> {
 
     private final RegisterProducer registerProducer;
 
-    public AuthService(IAuthRepository authRepository, IUserManager userManager, JwtTokenManager jwtTokenManager, CacheManager cacheManager, RegisterProducer registerProducer) {
+    private final RegisterMailProducer mailProducer;
+
+    public AuthService(IAuthRepository authRepository, IUserManager userManager, JwtTokenManager jwtTokenManager, CacheManager cacheManager, RegisterProducer registerProducer, RegisterMailProducer mailProducer) {
         super(authRepository);
         this.authRepository = authRepository;
         this.userManager = userManager;
         this.jwtTokenManager = jwtTokenManager;
         this.cacheManager = cacheManager;
         this.registerProducer = registerProducer;
+        this.mailProducer = mailProducer;
     }
 
     @Transactional
@@ -72,9 +76,9 @@ public class AuthService extends ServiceManager<Auth,Long> {
         auth.setActivationCode(CodeGenerator.genarateCode());
         try {
             save(auth);
-
             //rabbit mq ile haberleşme sağlanacak
             registerProducer.sendNewUser(IAuthMapper.INSTANCE.toRegisterModel(auth));
+            mailProducer.sendActivationCode(IAuthMapper.INSTANCE.toRegisterMailModel(auth));
             cacheManager.getCache("findbyrole").evict(auth.getRole().toString().toUpperCase());
         }catch (Exception e){
 
