@@ -8,6 +8,7 @@ import com.bilgeadam.exception.UserManagerException;
 import com.bilgeadam.manager.IAuthManager;
 import com.bilgeadam.mapper.IUserMapper;
 import com.bilgeadam.rabbitmq.model.RegisterModel;
+import com.bilgeadam.rabbitmq.producer.RegisterProducer;
 import com.bilgeadam.repository.IUserProfileRepository;
 import com.bilgeadam.repository.entity.UserProfile;
 import com.bilgeadam.repository.enums.EStatus;
@@ -15,11 +16,9 @@ import com.bilgeadam.utility.JwtTokenManager;
 import com.bilgeadam.utility.ServiceManager;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -29,7 +28,7 @@ import java.util.stream.Collectors;
     birde bu cache ne zman ve nasıl silinir bunla ilgili kod eklemelerinide yapalım
  */
 @Service
-public class UserProfileService extends ServiceManager<UserProfile,Long> {
+public class UserProfileService extends ServiceManager<UserProfile,String> {
 
     private final IUserProfileRepository userProfileRepository;
 
@@ -38,12 +37,15 @@ public class UserProfileService extends ServiceManager<UserProfile,Long> {
     private final IAuthManager authManager;
 
     private final CacheManager cacheManager;
-    public UserProfileService(IUserProfileRepository userProfileRepository, JwtTokenManager jwtTokenManager, IAuthManager authManager, CacheManager cacheManager) {
+
+    private final RegisterProducer registerProducer;
+    public UserProfileService(IUserProfileRepository userProfileRepository, JwtTokenManager jwtTokenManager, IAuthManager authManager, CacheManager cacheManager, RegisterProducer producer, RegisterProducer registerProducer) {
         super(userProfileRepository);
         this.userProfileRepository = userProfileRepository;
         this.jwtTokenManager = jwtTokenManager;
         this.authManager = authManager;
         this.cacheManager = cacheManager;
+        this.registerProducer = registerProducer;
     }
 
     public Boolean createUser(NewCreateUserRequestDto dto) {
@@ -56,7 +58,9 @@ public class UserProfileService extends ServiceManager<UserProfile,Long> {
     }
     public Boolean createUserWithRabbitMq(RegisterModel model) {
         try {
-            save(IUserMapper.INSTANCE.toUserProfile(model));
+        UserProfile userProfile= save(IUserMapper.INSTANCE.toUserProfile(model));
+            //rabbitmq ile elastic-service veri gonderelicek
+            registerProducer.sendNewUser(IUserMapper.INSTANCE.toRegisterElasticModel(userProfile));
             return  true;
         }catch (Exception e){
             throw  new UserManagerException(ErrorType.USER_NOT_CREATED);

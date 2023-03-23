@@ -1,30 +1,19 @@
 server:
-  port: 7072
+  port: 7079
 
 spring:
+  elasticsearch:
+    uris: http://localhost:9200
   zipkin:
     enabled: true
     base-url: http://localhost:9411
     service:
-      name: user-service
-  data:
-    mongodb:
-      host: localhost
-      port: 27020
-      username: java6user
-      password: root
-      database: userdb
+      name: elastic-service
   rabbitmq:
     host: localhost
     port: 5672
     username: java6
     password: 123
-
-
-jwt:
-  secretkey: ${java6secretkey}
-  audience: ${java6audience}
-  issuer: ${java6issuer}
 
 rabbitmq:
   exchange-user: user-exchange
