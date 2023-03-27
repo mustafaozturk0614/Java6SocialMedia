@@ -1,9 +1,6 @@
 package com.bilgeadam.service;
 
-import com.bilgeadam.dto.request.ActivateRequestDto;
-import com.bilgeadam.dto.request.LoginRequestDto;
-import com.bilgeadam.dto.request.RegisterRequestDto;
-import com.bilgeadam.dto.request.UpdateEmailOrUsernameRequestDto;
+import com.bilgeadam.dto.request.*;
 import com.bilgeadam.dto.response.RegisterResponseDto;
 import com.bilgeadam.exception.AuthManagerException;
 import com.bilgeadam.exception.ErrorType;
@@ -116,7 +113,8 @@ public class AuthService extends ServiceManager<Auth,Long> {
             auth.get().setStatus(EStatus.ACTIVE);
             update(auth.get());
             // user service e istek atılacak
-            userManager.activateStatus(auth.get().getId());
+            String token=jwtTokenManager.createToken(auth.get().getId(),auth.get().getRole()).get();
+            userManager.activateStatus("Bearer "+token);
             return true;
         }else {
             throw new AuthManagerException(ErrorType.ACTIVATE_CODE_ERROR);

@@ -1,5 +1,6 @@
 package com.bilgeadam.manager;
 
+import com.bilgeadam.dto.request.ActivateStatusDto;
 import com.bilgeadam.dto.request.NewCreateUserRequestDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,6 @@ public interface IUserManager {
     public ResponseEntity<Boolean> delete(@RequestParam Long authId);
 
 
-    @GetMapping(ACTIVATESTATUS+"/{authId}")
-    public ResponseEntity<Boolean> activateStatus(@PathVariable Long authId);
+    @PostMapping(ACTIVATESTATUS)
+    public ResponseEntity<Boolean> activateStatus(@RequestHeader(value = "Authorization") String token);
 }

@@ -4,13 +4,12 @@ buildscript {
     }
 
 }
-//java6AUTHDB
-//java6USERDB
 
 dependencies {
     implementation libs.postgresql
     implementation libs.springBootJpa
     implementation libs.springCloudConfigClient
     implementation libs.springBootRabbitMQ
+    implementation libs.springBootSecurity
 
 }

@@ -1,5 +1,6 @@
 package com.bilgeadam.service;
 
+import com.bilgeadam.dto.request.ActivateStatusDto;
 import com.bilgeadam.dto.request.NewCreateUserRequestDto;
 import com.bilgeadam.dto.request.UpdateEmailOrUsernameRequestDto;
 import com.bilgeadam.dto.request.UserProfileUpdateRequestDto;
@@ -66,8 +67,12 @@ public class UserProfileService extends ServiceManager<UserProfile,String> {
             throw  new UserManagerException(ErrorType.USER_NOT_CREATED);
         }
     }
-    public Boolean activateStatus(Long authId) {
-        Optional<UserProfile> userProfile=userProfileRepository.findOptionalByAuthId(authId);
+    public Boolean activateStatus(String token) {
+        Optional<Long> authId=jwtTokenManager.getIdFromToken(token);
+        if (authId.isEmpty()){
+            throw new UserManagerException(ErrorType.INVALID_TOKEN);
+        }
+        Optional<UserProfile> userProfile=userProfileRepository.findOptionalByAuthId(authId.get());
         if (userProfile.isEmpty()){
             throw new UserManagerException(ErrorType.USER_NOT_FOUND);
         }
