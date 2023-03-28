@@ -10,4 +10,7 @@ import java.util.Optional;
 @Repository
 public interface IFollowRepository extends MongoRepository<Follow,String> {
 
+
+    Optional<Follow> findByUserIdAndFollowId(String userId,String followId);
+
 }

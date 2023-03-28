@@ -1,10 +1,12 @@
 package com.bilgeadam.mapper;
 
+import com.bilgeadam.dto.request.CreateFollowRequestDto;
 import com.bilgeadam.dto.request.NewCreateUserRequestDto;
 import com.bilgeadam.dto.request.UpdateEmailOrUsernameRequestDto;
 import com.bilgeadam.dto.request.UserProfileUpdateRequestDto;
 import com.bilgeadam.rabbitmq.model.RegisterElasticModel;
 import com.bilgeadam.rabbitmq.model.RegisterModel;
+import com.bilgeadam.repository.entity.Follow;
 import com.bilgeadam.repository.entity.UserProfile;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
@@ -25,6 +27,8 @@ public interface IUserMapper {
     UpdateEmailOrUsernameRequestDto toUpdateEmailOrUsernameRequestDto(final UserProfileUpdateRequestDto dto);
 
     RegisterElasticModel toRegisterElasticModel(final UserProfile userProfile);
+
+
 
 
 }

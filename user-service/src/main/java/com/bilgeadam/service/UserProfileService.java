@@ -150,4 +150,8 @@ public class UserProfileService extends ServiceManager<UserProfile,String> {
                 .orElseThrow(()->{throw new UserManagerException(ErrorType.USER_NOT_FOUND);}))
                 .collect(Collectors.toList());
     }
+
+    public Optional<UserProfile> findByAuthId(Long authId) {
+        return userProfileRepository.findOptionalByAuthId(authId);
+    }
 }
