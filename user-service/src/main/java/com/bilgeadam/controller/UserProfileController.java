@@ -55,7 +55,7 @@ public class UserProfileController {
         return  ResponseEntity.ok(userProfileService.findByUsername(username));
     }
     @GetMapping(FINDBYROLE)
-    public ResponseEntity<List<UserProfile>> findByRole(@RequestParam  String role){
-        return  ResponseEntity.ok(userProfileService.findByRole(role));
+    public ResponseEntity<List<UserProfile>> findByRole(@RequestHeader(value = "Authorization")String token,  @RequestParam  String role){
+        return  ResponseEntity.ok(userProfileService.findByRole(role,token));
     }
 }

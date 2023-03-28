@@ -10,6 +10,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 
+import java.util.List;
+
 
 @Data
 @NoArgsConstructor
@@ -33,5 +35,7 @@ private String about;
 @Builder.Default
 private EStatus status=EStatus.PENDING;
 
+private List<String> follows;
 
+private List<String> follower;
 }
