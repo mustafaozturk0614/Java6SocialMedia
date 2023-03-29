@@ -12,7 +12,7 @@ import java.util.Optional;
 public interface IAuthRepository extends JpaRepository<Auth,Long> {
 
     Optional<Auth> findOptionalByUsernameAndPassword(String username,String password);
-
+    Optional<Auth> findOptionalByUsername(String username);
     Boolean existsByUsernameAndPassword(String username,String password);
 
     List<Auth> findAllByRole(ERole role);

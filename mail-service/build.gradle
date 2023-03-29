@@ -8,4 +8,5 @@ buildscript {
 dependencies {
  implementation libs.springBootMailSender
     implementation libs.springBootRabbitMQ
+    implementation libs.springCloudConfigClient
 }

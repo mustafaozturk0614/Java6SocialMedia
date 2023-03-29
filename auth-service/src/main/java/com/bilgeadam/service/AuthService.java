@@ -16,6 +16,7 @@ import com.bilgeadam.utility.CodeGenerator;
 import com.bilgeadam.utility.JwtTokenManager;
 import com.bilgeadam.utility.ServiceManager;
 import org.springframework.cache.CacheManager;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -39,7 +40,8 @@ public class AuthService extends ServiceManager<Auth,Long> {
 
     private final RegisterMailProducer mailProducer;
 
-    public AuthService(IAuthRepository authRepository, IUserManager userManager, JwtTokenManager jwtTokenManager, CacheManager cacheManager, RegisterProducer registerProducer, RegisterMailProducer mailProducer) {
+   private final PasswordEncoder passwordEncoder;
+    public AuthService(IAuthRepository authRepository, IUserManager userManager, JwtTokenManager jwtTokenManager, CacheManager cacheManager, RegisterProducer registerProducer, RegisterMailProducer mailProducer, PasswordEncoder passwordEncoder) {
         super(authRepository);
         this.authRepository = authRepository;
         this.userManager = userManager;
@@ -47,6 +49,7 @@ public class AuthService extends ServiceManager<Auth,Long> {
         this.cacheManager = cacheManager;
         this.registerProducer = registerProducer;
         this.mailProducer = mailProducer;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
@@ -54,6 +57,8 @@ public class AuthService extends ServiceManager<Auth,Long> {
         Auth auth= IAuthMapper.INSTANCE.toAuth(dto);
         auth.setActivationCode(CodeGenerator.genarateCode());
             try {
+
+
                 save(auth);
                 userManager.createUser(IAuthMapper.INSTANCE.toNewCreateUserRequestDto(auth));
                 cacheManager.getCache("findbyrole").evict(auth.getRole().toString().toUpperCase());
@@ -69,9 +74,11 @@ public class AuthService extends ServiceManager<Auth,Long> {
 
     @Transactional
     public RegisterResponseDto registerWithRabbitMq(RegisterRequestDto dto) {
+           dto.setPassword(passwordEncoder.encode(dto.getPassword()));
         Auth auth= IAuthMapper.INSTANCE.toAuth(dto);
         auth.setActivationCode(CodeGenerator.genarateCode());
         try {
+
             save(auth);
             //rabbit mq ile haberleşme sağlanacak
             registerProducer.sendNewUser(IAuthMapper.INSTANCE.toRegisterModel(auth));
@@ -90,14 +97,19 @@ public class AuthService extends ServiceManager<Auth,Long> {
 
 
     public String login(LoginRequestDto dto) {
-        Optional<Auth> auth=authRepository.findOptionalByUsernameAndPassword(dto.getUsername(), dto.getPassword());
 
-        if (auth.isEmpty()){
+        Optional<Auth> auth=authRepository.findOptionalByUsername(dto.getUsername());
+
+//        System.out.println(auth.get().getPassword());
+//        System.out.println(passwordEncoder.encode(dto.getPassword()));
+
+        if (auth.isEmpty()||!passwordEncoder.matches(dto.getPassword(),auth.get().getPassword())){
             throw  new AuthManagerException(ErrorType.LOGIN_ERROR);
         }
         if (!auth.get().getStatus().equals(EStatus.ACTIVE)){
             throw new AuthManagerException(ErrorType.ACCOUNT_NOT_ACTIVE);
         }
+
 
         return jwtTokenManager.createToken(auth.get().getId()
                 ,auth.get().getRole()).orElseThrow(()-> {throw new AuthManagerException(ErrorType.TOKEN_NOT_CREATED);});

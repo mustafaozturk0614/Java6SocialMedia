@@ -1,13 +1,14 @@
 package com.bilgeadam.controller;
 
 import com.bilgeadam.dto.request.CreateFollowRequestDto;
+import com.bilgeadam.repository.entity.Follow;
 import com.bilgeadam.service.FollowService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
 import  static  com.bilgeadam.constant.ApiUrls.*;
 @RestController
 @RequiredArgsConstructor
@@ -21,5 +22,9 @@ public class FollowController {
         return ResponseEntity.ok(followService.createFollow(dto));
     }
 
+    @GetMapping(FINDALL)
+    public  ResponseEntity<List<Follow>> findAll(){
 
+        return  ResponseEntity.ok(followService.findAll());
+    }
 }
